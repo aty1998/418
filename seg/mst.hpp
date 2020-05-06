@@ -1,3 +1,9 @@
+/**
+ * @file mst.hpp
+ * @brief Implements an image segmenter using Boruvka's MST algorithm.
+ * @author Andrew Yang (atyang)
+ */
+
 #ifndef __MST_H__
 #define __MST_H__
 
@@ -13,8 +19,10 @@
 #include <cmath>
 #include <queue>
 
+/** Infinite weight. */
 #define INF (1 << 20)
 
+// Neighbors for an 8-connected grid
 const int NDIR = 8;
 const int DR[] = {0, -1, -1, -1, 0, 1, 1, 1};
 const int DC[] = {1, 1, 0, -1, -1, -1, 0, 1};
@@ -34,9 +42,9 @@ template <typename T>
 class SegOMP
 {
 public:
-    Timer timer;
-    int nsegs;
-    int **label;
+    Timer timer;    /** The instrumentation timer. */
+    int nsegs;      /** Number of image segments. */
+    int **label;    /** Segment label data. */
 
     SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread, int icred);
 
@@ -86,36 +94,52 @@ private:
 
 using namespace std;
 
+/** Computes the row-major vertex ID of a grid location. */
 template <typename T>
 int SegOMP<T>::cell(int r, int c) const
 {
     return r * ncol + c;
 }
 
+/** Computes the row of a vertex ID. */
 template <typename T>
 int SegOMP<T>::row(int vid) const
 {
     return vid / ncol;
 }
 
+/** Computes the column of a vertex ID. */
 template <typename T>
 int SegOMP<T>::col(int vid) const
 {
     return vid % ncol;
 }
 
+/** Returns the size of each of the nthread bins with given total size. */
 template <typename T>
 int SegOMP<T>::bin_size(int size) const
 {
     return (size + nthread - 1) / nthread;
 }
 
+/** Returns the starting index of a given bin with given total size. */
 template <typename T>
 int SegOMP<T>::bin_start(int size, int ti) const
 {
     return min(bin_size(size) * ti, size);
 }
 
+/**
+ * Instantiates an image segmenter, allocating data structures and computing a
+ * graph representation of an input image.
+ * 
+ * @param nrow number of rows in the image
+ * @param ncol number of columns in the image
+ * @param data the image data
+ * @param cmp weight function between two image data values
+ * @param nthread number of bins
+ * @param icred initial vertex credit
+ */
 template <typename T>
 SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
                   int icred) : timer()
@@ -194,6 +218,7 @@ SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
     joiners = new int[nvert];
     jprev = new int[nthread];
 
+    // Initialize per-vertex random seeds
     seeds = new unsigned int[nvert];
     for (int vid = 0; vid < nvert; vid++)
     {
@@ -212,6 +237,10 @@ SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
         label[r] = new int[ncol];
 }
 
+/**
+ * Runs the image segmenter, capturing instrumentation data in the process. Only
+ * call this method once. The resulting image will be stored in @ref labels.
+ */
 template <typename T>
 void SegOMP<T>::run()
 {
@@ -235,6 +264,7 @@ void SegOMP<T>::run()
     segment();
 }
 
+/** Computes the minimum weight edge incident to each vertex. */
 template <typename T>
 void SegOMP<T>::find_joiners()
 {
@@ -307,6 +337,7 @@ void SegOMP<T>::find_joiners()
 #endif
 }
 
+/** Randomly decides which vertices become stars. */
 template <typename T>
 void SegOMP<T>::find_stars()
 {
@@ -383,6 +414,7 @@ void SegOMP<T>::find_stars()
 #endif
 }
 
+/** Contracts all joiner edges pointing from satellites to stars. */
 template <typename T>
 void SegOMP<T>::contract_stars()
 {
@@ -509,6 +541,7 @@ void SegOMP<T>::contract_stars()
 #endif
 }
 
+/** Removes all vertices with degree 0. */
 template <typename T>
 void SegOMP<T>::prune_vertices()
 {
@@ -556,14 +589,15 @@ void SegOMP<T>::prune_vertices()
     timer.stop("prune");
 }
 
+/** Using the computed MSF, compute the strongly-connected components. */
 template <typename T>
 void SegOMP<T>::segment()
 {
     timer.start("segment");
 
+    // Compute adjacency list from MSF
     int n = nrow * ncol;
     vector<vector<int> > AL(n);
-
     for (int ei = 0; ei < mstsize; ei++)
     {
         Edge e = mstedges[ei];
@@ -573,9 +607,9 @@ void SegOMP<T>::segment()
         AL[v].push_back(u);
     }
 
+    // Flood-fill the MSF using BFS to find the SCCs
     for (int vid = 0; vid < n; vid++)
         label[row(vid)][col(vid)] = -1;
-
     nsegs = 0;
     queue<int> Q;
     for (int src = 0; src < n; src++)

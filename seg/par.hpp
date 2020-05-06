@@ -1,3 +1,9 @@
+/**
+ * @file par.hpp
+ * @brief Implements a parallel, in-place exclusive addition scan.
+ * @author Andrew Yang (atyang)
+ */
+
 #ifndef __PAR_H__
 #define __PAR_H__
 
