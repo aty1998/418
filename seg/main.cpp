@@ -100,8 +100,11 @@ int main(int argc, char *argv[])
     }
 
     // Print instrumentation information
-    int nlabels = 5;
-    string labels[] = {"joiner", "star", "contract", "prune", "segment"};
+    int nlabels = 6;
+    string labels[] =
+    {
+        "init", "joiner", "star", "contract", "prune", "segment"
+    };
     for (int i = 0; i < nlabels; i++)
     {
         long long total = 0;
@@ -113,4 +116,5 @@ int main(int argc, char *argv[])
         cerr << labels[i] << " " << total << endl;
     }
     cerr << "total " << seg.timer.total << endl;
+    cerr << "iterations " << seg.niters << endl;
 }

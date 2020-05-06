@@ -45,6 +45,7 @@ public:
     Timer timer;    /** The instrumentation timer. */
     int nsegs;      /** Number of image segments. */
     int **label;    /** Segment label data. */
+    int niters;     /** Number of star contraction iterations. */
 
     SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread, int icred);
 
@@ -144,6 +145,8 @@ template <typename T>
 SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
                   int icred) : timer()
 {
+    timer.start("init");
+
     assert(nrow >= 0 && ncol >= 0 && nthread > 0);
     this->nrow = nrow;
     this->ncol = ncol;
@@ -235,6 +238,8 @@ SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
     label = new int*[nrow];
     for (int r = 0; r < nrow; r++)
         label[r] = new int[ncol];
+        
+    timer.stop("init");
 }
 
 /**
@@ -244,12 +249,15 @@ SegOMP<T>::SegOMP(int nrow, int ncol, T **data, int cmp(T, T), int nthread,
 template <typename T>
 void SegOMP<T>::run()
 {
+    niters = 0;
+
     while (nedge > 0)
     {
         find_joiners();
         find_stars();
         contract_stars();
         prune_vertices();
+        niters++;
     }
 
 #if DEBUG
