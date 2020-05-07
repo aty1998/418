@@ -8,7 +8,7 @@ is my class project submission for CMU's 15-418 course.
 ## Example
 
 ![Ball](https://github.com/aty1998/418/blob/master/seg/images/ball.jpg)
-![Ball Out](https://github.com/aty1998/418/blob/master/seg/images/ball-out.jpg)
+![Ball Out](https://github.com/aty1998/418/blob/master/seg/images/ball-out.png)
 
 ## Using seg-omp and segment.py
 
