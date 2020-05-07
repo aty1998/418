@@ -5,6 +5,11 @@ spanning forests with Boruvka's algorithm. The script `segment.py` is a wrapper
 around `seg-omp` that converts images into a format the segmenter can use. This
 is my class project submission for CMU's 15-418 course.
 
+## Example
+
+![Ball](https://github.com/aty1998/418/blob/master/seg/images/ball.jpg)
+![Ball Out](https://github.com/aty1998/418/blob/master/seg/images/ball-out.jpg)
+
 ## Using seg-omp and segment.py
 
 ```bash
